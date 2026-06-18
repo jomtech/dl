@@ -28,7 +28,8 @@ jobs:
     - name: Install dependencies
       run: |
         # 1. apt-get updateを省略し、必要なものだけを即座にインストール
-        sudo apt-get install -y aria2 parallel age ffmpeg
+        sudo apt-get update
+        sudo apt-get install -y aria2 ffmpeg parallel age
         
         # 2. Pythonパッケージもキャッシュなしで高速インストール
         pip install --no-cache-dir huggingface_hub
