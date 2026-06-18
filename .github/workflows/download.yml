@@ -25,11 +25,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install dependencies
+    - name: Install dependencies (Ultra Fast)
       run: |
-        sudo apt-get update
-        sudo apt-get install -y aria2 ffmpeg parallel age
-        pip install huggingface_hub
+        # 1. apt-get updateを省略し、必要なものだけを即座にインストール
+        # ※ ffmpegはランナーにプリインストール済みのため除外
+        sudo apt-get install -y aria2 parallel age
+        
+        # 2. Pythonパッケージもキャッシュなしで高速インストール
+        pip install --no-cache-dir huggingface_hub
 
     - name: Setup Secrets
       run: |
