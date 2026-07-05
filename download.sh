@@ -63,7 +63,24 @@ downloaded_m3u8_file="$WORK_DIR/$m3u8_file_name"
 echo "ステップ1: m3u8ダウンロードと解析..."
 
 # m3u8を取得
-aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url"
+if [[ "$m3u8_url" == *"://fc2stream.tv"* ]]; then
+    aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url" \
+        --header='Host: fc2stream.tv' \
+        --header='User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0' \
+        --header='Accept: */*' \
+        --header='Accept-Language: ja,en-US;q=0.9,en;q=0.8' \
+        --header='Accept-Encoding: gzip, deflate, br, zstd' \
+        --header='Sec-GPC: 1' \
+        --header='Connection: keep-alive' \
+        --header='Referer: https://fc2stream.tv/e/akoskkssjf94' \
+        --header='Cookie: _ga_2TL7NH453R=GS2.1.s1783212093$o1$g0$t1783212093$j60$l0$h0; _ga=GA1.1.1116863472.1783212093; _ga_E2BG6CPV2J=GS2.1.s1783212093$o1$g0$t1783212093$j60$l0$h0' \
+        --header='Sec-Fetch-Dest: empty' \
+        --header='Sec-Fetch-Mode: cors' \
+        --header='Sec-Fetch-Site: same-origin' \
+        --header='TE: trailers'
+else
+    aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url"
+fi
 count=0
 while read -r line; do
     # コメント行や空行をスキップ
