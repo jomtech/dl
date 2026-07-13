@@ -8,16 +8,18 @@ ua="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/1
 
 # 引数の解析
 SERIAL_MODE=false
+LOCAL_M3U8=""
 args=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -s|--serial) SERIAL_MODE=true; shift ;;
+    -l|--local-m3u8) LOCAL_M3U8="$2"; shift 2 ;;
     *) args+=("$1"); shift ;;
   esac
 done
 
 if [ ${#args[@]} -ne 2 ]; then
-  echo "使用法: $0 [-s|--serial] <m3u8_url> <output_filename_without_extension>"
+  echo "使用法: $0 [-s|--serial] [-l|--local-m3u8 <file>] <m3u8_url> <output_filename_without_extension>"
   exit 1
 fi
 
@@ -63,23 +65,28 @@ downloaded_m3u8_file="$WORK_DIR/$m3u8_file_name"
 echo "ステップ1: m3u8ダウンロードと解析..."
 
 # m3u8を取得
-if [[ "$m3u8_url" == *"://fc2stream.tv"* ]]; then
-    aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url" \
-        --header='Host: fc2stream.tv' \
-        --header='User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0' \
-        --header='Accept: */*' \
-        --header='Accept-Language: ja,en-US;q=0.9,en;q=0.8' \
-        --header='Accept-Encoding: gzip, deflate, br, zstd' \
-        --header='Sec-GPC: 1' \
-        --header='Connection: keep-alive' \
-        --header='Referer: https://fc2stream.tv/e/akoskkssjf94' \
-        --header='Cookie: _ga_2TL7NH453R=GS2.1.s1783212093$o1$g0$t1783212093$j60$l0$h0; _ga=GA1.1.1116863472.1783212093; _ga_E2BG6CPV2J=GS2.1.s1783212093$o1$g0$t1783212093$j60$l0$h0' \
-        --header='Sec-Fetch-Dest: empty' \
-        --header='Sec-Fetch-Mode: cors' \
-        --header='Sec-Fetch-Site: same-origin' \
-        --header='TE: trailers'
+if [ -n "$LOCAL_M3U8" ]; then
+    echo "ローカルのm3u8ファイルを使用します: $LOCAL_M3U8"
+    cp "$LOCAL_M3U8" "$downloaded_m3u8_file"
 else
-    aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url"
+    if [[ "$m3u8_url" == *"://fc2stream.tv"* ]]; then
+        aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url" \
+            --header='Host: fc2stream.tv' \
+            --header='User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0' \
+            --header='Accept: */*' \
+            --header='Accept-Language: ja,en-US;q=0.9,en;q=0.8' \
+            --header='Accept-Encoding: gzip, deflate, br, zstd' \
+            --header='Sec-GPC: 1' \
+            --header='Connection: keep-alive' \
+            --header='Referer: https://fc2stream.tv/e/akoskkssjf94' \
+            --header='Cookie: _ga_2TL7NH453R=GS2.1.s1783212093$o1$g0$t1783212093$j60$l0$h0; _ga=GA1.1.1116863472.1783212093; _ga_E2BG6CPV2J=GS2.1.s1783212093$o1$g0$t1783212093$j60$l0$h0' \
+            --header='Sec-Fetch-Dest: empty' \
+            --header='Sec-Fetch-Mode: cors' \
+            --header='Sec-Fetch-Site: same-origin' \
+            --header='TE: trailers'
+    else
+        aria2c -d "$WORK_DIR" -o "$m3u8_file_name" "$m3u8_url"
+    fi
 fi
 count=0
 while read -r line; do

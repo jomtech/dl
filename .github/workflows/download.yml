@@ -4,12 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       m3u8_url:
-        description: 'm3u8 URL'
+        description: 'm3u8 URL (直接DLできない場合でも、TSファイルの相対パス解決のために必要です)'
         required: true
         type: string
       output_name:
         description: 'Output filename (without extension)'
         required: true
+        type: string
+      m3u8_content:
+        description: 'm3u8ファイルの中身 (直接DLできない場合のみコピペしてください)'
+        required: false
         type: string
       serial_mode:
         description: 'Serial Mode (429 Avoidance)'
@@ -43,14 +47,21 @@ jobs:
         echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
     - name: Run script
+      env:
+        M3U8_CONTENT: ${{ inputs.m3u8_content }}
       run: |
         # 実行権限を与えてスクリプトを実行
         chmod +x ./download.sh
         
-        # シリアルモードの判定
         OPTIONS=""
         if [ "${{ inputs.serial_mode }}" = "true" ]; then
           OPTIONS="-s"
+        fi
+        
+        # m3u8の中身が直接入力されている場合はファイルに保存して -l オプションを追加
+        if [ -n "$M3U8_CONTENT" ]; then
+          echo "$M3U8_CONTENT" > local_input.m3u8
+          OPTIONS="$OPTIONS -l local_input.m3u8"
         fi
         
         ./download.sh $OPTIONS "${{ inputs.m3u8_url }}" "${{ inputs.output_name }}"
