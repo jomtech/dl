@@ -11,8 +11,8 @@ on:
         description: 'Output filename (without extension)'
         required: true
         type: string
-      m3u8_content:
-        description: 'm3u8ファイルの中身 (直接DLできない場合のみコピペしてください)'
+      m3u8_text_url:
+        description: 'm3u8の中身を置いたGistのRaw URL等 (直接DLできない場合のみ)'
         required: false
         type: string
       serial_mode:
@@ -47,8 +47,6 @@ jobs:
         echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
     - name: Run script
-      env:
-        M3U8_CONTENT: ${{ inputs.m3u8_content }}
       run: |
         # 実行権限を与えてスクリプトを実行
         chmod +x ./download.sh
@@ -58,9 +56,9 @@ jobs:
           OPTIONS="-s"
         fi
         
-        # m3u8の中身が直接入力されている場合はファイルに保存して -l オプションを追加
-        if [ -n "$M3U8_CONTENT" ]; then
-          echo "$M3U8_CONTENT" > local_input.m3u8
+        # GistなどのRaw URLが指定されている場合は、そこからm3u8をダウンロードして -l オプションを追加
+        if [ -n "${{ inputs.m3u8_text_url }}" ]; then
+          curl -sL "${{ inputs.m3u8_text_url }}" > local_input.m3u8
           OPTIONS="$OPTIONS -l local_input.m3u8"
         fi
         
