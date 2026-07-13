@@ -80,12 +80,12 @@ jobs:
           name: encrypted-video
 
       - name: Install Hugging Face Hub
-        run: pip install --no-cache-dir huggingface_hub hf_transfer
+        run: pip install --no-cache-dir huggingface_hub huggingface_hub[hf_xet]
 
       - name: Upload to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_HUB_ENABLE_HF_TRANSFER: "1"
+          HF_XET_HIGH_PERFORMANCE: "1"
         run: |
           AGE_FILE=$(ls *.age | head -n 1)
           if [ -z "$AGE_FILE" ]; then
