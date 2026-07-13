@@ -191,8 +191,22 @@ rm "$final_output_path"
 
 age -R ./recipient.txt -o "$AGE_PATH" "$TAR_PATH"
 
-echo "Hugging Faceへ暗号化ファイル（${SECURE_BASENAME}.age）をアップロード中..."
-hf upload jomdel0/ud-open "$AGE_PATH" --repo-type=dataset
+# WORK_DIRは終了時に削除されるため、完成したageファイルをoutput_dirへ移動する
+FINAL_AGE_PATH="$output_dir/$(basename "$AGE_PATH")"
+mv "$AGE_PATH" "$FINAL_AGE_PATH"
 
-echo "完了: $AGE_PATH をアップロードしました。"
-# trapにより終了時に作業用ディレクトリは自動削除されます。出力ファイルは /dev/shm に残ります。
+if [ "${SKIP_UPLOAD:-false}" = "true" ]; then
+    echo "アップロードをスキップしました。出力ファイル: $FINAL_AGE_PATH"
+    if [ -n "${GITHUB_ENV:-}" ]; then
+        echo "AGE_FILE_PATH=$FINAL_AGE_PATH" >> "$GITHUB_ENV"
+        echo "AGE_FILE_NAME=$(basename "$FINAL_AGE_PATH")" >> "$GITHUB_ENV"
+    fi
+else
+    echo "Hugging Faceへ暗号化ファイル（$(basename "$FINAL_AGE_PATH")）をアップロード中..."
+    hf upload jomdel0/ud-open "$FINAL_AGE_PATH" --repo-type=dataset
+    echo "完了: $FINAL_AGE_PATH をアップロードしました。"
+    # アップロードが完了したらローカルのファイルは削除する（任意）
+    # rm "$FINAL_AGE_PATH"
+fi
+
+# trapにより終了時に作業用ディレクトリは自動削除されます。

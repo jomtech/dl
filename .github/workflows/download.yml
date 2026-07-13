@@ -22,9 +22,8 @@ on:
         default: false
 
 jobs:
-  download-and-upload:
+  download:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -37,16 +36,15 @@ jobs:
         curl -sL "https://dl.filippo.io/age/latest?for=linux/amd64" -o age.tar.gz
         tar -xzf age.tar.gz
         sudo mv age/age /usr/local/bin/
-        
-        pip install --no-cache-dir huggingface_hub
 
     - name: Setup Secrets
       run: |
-        # GitHubのSecretsからageの受信者鍵とHFのトークンを設定
+        # GitHubのSecretsからageの受信者鍵を設定
         echo "${{ secrets.AGE_RECIPIENT }}" > recipient.txt
-        echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
-    - name: Run script
+    - name: Run script (Download & Encrypt)
+      env:
+        SKIP_UPLOAD: "true"
       run: |
         # 実行権限を与えてスクリプトを実行
         chmod +x ./download.sh
@@ -63,3 +61,36 @@ jobs:
         fi
         
         ./download.sh $OPTIONS "${{ inputs.m3u8_url }}" "${{ inputs.output_name }}"
+
+    - name: Upload encrypted file to GitHub Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: encrypted-video
+        path: ${{ env.AGE_FILE_PATH }}
+        retention-days: 1
+        if-no-files-found: error
+
+  upload:
+    needs: download
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: encrypted-video
+        
+    - name: Install Hugging Face Hub
+      run: pip install --no-cache-dir huggingface_hub
+
+    - name: Upload to Hugging Face
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        AGE_FILE=$(ls *.age | head -n 1)
+        if [ -z "$AGE_FILE" ]; then
+          echo "エラー: 暗号化ファイルが見つかりません"
+          exit 1
+        fi
+        echo "Hugging Faceへ暗号化ファイル（$AGE_FILE）をアップロード中..."
+        hf upload jomdel0/ud-open "$AGE_FILE" --repo-type=dataset
+        echo "完了: $AGE_FILE をアップロードしました。"
