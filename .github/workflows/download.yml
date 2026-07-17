@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -63,7 +63,7 @@ jobs:
           ./download.sh $OPTIONS "${{ inputs.m3u8_url }}" "${{ inputs.output_name }}"
 
       - name: Upload encrypted file to GitHub Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: encrypted-video
           path: ${{ env.AGE_FILE_PATH }}
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: encrypted-video
 
